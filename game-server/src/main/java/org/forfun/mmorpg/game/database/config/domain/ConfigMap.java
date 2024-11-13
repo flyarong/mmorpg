@@ -1,12 +1,10 @@
 package org.forfun.mmorpg.game.database.config.domain;
 
+import jakarta.persistence.Id;
 import lombok.Getter;
-
-import javax.persistence.Id;
 
 /**
  * 地图资源
- *
  *
  */
 @Getter

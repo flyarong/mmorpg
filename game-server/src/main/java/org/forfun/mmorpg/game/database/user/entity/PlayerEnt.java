@@ -1,7 +1,9 @@
 package org.forfun.mmorpg.game.database.user.entity;
 
-import org.forfun.mmorpg.game.asyncdb.DelayPersistence;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Transient;
 import org.forfun.mmorpg.game.base.GameContext;
+import org.forfun.mmorpg.game.battle.model.BattleContext;
 import org.forfun.mmorpg.game.database.converter.JpaObjectConverter;
 import org.forfun.mmorpg.game.database.user.BaseEntity;
 import org.forfun.mmorpg.game.database.user.dao.PlayerDao;
@@ -13,18 +15,17 @@ import lombok.Setter;
 import org.hibernate.annotations.Proxy;
 import org.springframework.data.repository.CrudRepository;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "playerent")
 @Proxy(lazy = false)
 @Getter
 @Setter
-public class PlayerEnt extends Creature implements BaseEntity<Long>, DelayPersistence {
+public class PlayerEnt extends Creature implements BaseEntity<Long> {
 
     @Id
     @Column
@@ -45,6 +46,9 @@ public class PlayerEnt extends Creature implements BaseEntity<Long>, DelayPersis
     @Column
     @Convert(converter = JpaObjectConverter.class)
     private VipRight vipRight;
+
+    @Transient
+    private BattleContext battleContext;
 
     @Override
     public CrudRepository<PlayerEnt, Long> getCrudRepository() {

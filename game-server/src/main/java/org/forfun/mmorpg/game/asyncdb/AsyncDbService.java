@@ -1,7 +1,9 @@
 package org.forfun.mmorpg.game.asyncdb;
 
-import com.google.common.collect.Sets;
-import org.forfun.mmorpg.common.util.thread.NamedThreadFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jforgame.commons.ds.ConcurrentHashSet;
+import jforgame.commons.thread.NamedThreadFactory;
 import org.forfun.mmorpg.game.ServerType;
 import org.forfun.mmorpg.game.base.GameContext;
 import org.forfun.mmorpg.game.database.user.BaseEntity;
@@ -9,8 +11,7 @@ import org.forfun.mmorpg.game.database.user.entity.PlayerEnt;
 import org.forfun.mmorpg.game.logger.LoggerUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -26,9 +27,9 @@ public class AsyncDbService {
 
     private final AtomicBoolean run = new AtomicBoolean(true);
 
-    private Worker playerWorker = new Worker("player");
+    private final Worker playerWorker = new Worker("player");
 
-    private Worker commonWorker = new Worker("common");
+    private final Worker commonWorker = new Worker("common");
 
     @PostConstruct
     private void init() {
@@ -36,17 +37,17 @@ public class AsyncDbService {
         new NamedThreadFactory("common-save-service").newThread(commonWorker).start();
     }
 
-	public void saveToDb(BaseEntity entity) {
+    public void saveToDb(BaseEntity<? extends Serializable> entity) {
         if (GameContext.serverType != ServerType.GAME) {
             // only game server can saving data
             return;
         }
-		if (entity instanceof PlayerEnt) {
-			playerWorker.add2Queue(entity);
-		} else {
-			commonWorker.add2Queue(entity);
-		}
-	}
+        if (entity instanceof PlayerEnt) {
+            playerWorker.add2Queue(entity);
+        } else {
+            commonWorker.add2Queue(entity);
+        }
+    }
 
 
     private class Worker implements Runnable {
@@ -55,7 +56,7 @@ public class AsyncDbService {
 
         private BlockingQueue<BaseEntity> queue = new LinkedBlockingDeque<>();
 
-        private Set<String> savingQueue = Sets.newConcurrentHashSet();
+        private Set<String> savingQueue = new ConcurrentHashSet<>();
 
         public void add2Queue(BaseEntity entity) {
             String key = entity.getKey();
@@ -84,23 +85,26 @@ public class AsyncDbService {
             }
         }
 
-		/**
-		 * 数据真正持久化
-		 *
-		 * @param entity
-		 */
-		@SuppressWarnings("unchecked")
-		private void saveToDb(BaseEntity entity) {
-			try {
-				entity.getCrudRepository().save(entity);
-				String key = entity.getKey();
-                savingQueue.remove(key);
-			} catch (Exception e) {
-				LoggerUtils.error("", e);
-				// 重新放入队列
-				add2Queue(entity);
-			}
-		}
+        /**
+         * 数据真正持久化
+         *
+         * @param entity
+         */
+        @SuppressWarnings("unchecked")
+        private void saveToDb(BaseEntity entity) {
+            try {
+                if (entity.isDelete()) {
+                    entity.getCrudRepository().delete(entity);
+                } else {
+                    entity.getCrudRepository().save(entity);
+                }
+                savingQueue.remove(entity.getKey());
+            } catch (Exception e) {
+                LoggerUtils.error("", e);
+                // 重新放入队列
+                add2Queue(entity);
+            }
+        }
 
         private void saveAllBeforeShutDown() {
             while (!queue.isEmpty()) {
@@ -113,16 +117,16 @@ public class AsyncDbService {
             }
         }
 
-		public void shutDown() {
-			for (; ; ) {
-				if (!queue.isEmpty()) {
-					saveAllBeforeShutDown();
-				} else {
-					break;
-				}
-			}
-			LoggerUtils.error("[" + name + "持久器] 执行全部命令后关闭");
-		}
+        public void shutDown() {
+            for (; ; ) {
+                if (!queue.isEmpty()) {
+                    saveAllBeforeShutDown();
+                } else {
+                    break;
+                }
+            }
+            LoggerUtils.error("[" + name + "持久器] 执行全部命令后关闭");
+        }
     }
 
     @PreDestroy

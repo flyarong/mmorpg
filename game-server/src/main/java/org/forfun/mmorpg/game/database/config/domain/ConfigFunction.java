@@ -1,8 +1,8 @@
 package org.forfun.mmorpg.game.database.config.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -10,7 +10,7 @@ import org.forfun.mmorpg.game.function.model.FunctionOpenType;
 
 import lombok.Getter;
 
-@Entity
+@Entity(name = "configfunction")
 @Getter
 public class ConfigFunction {
 	

@@ -1,10 +1,13 @@
 package org.forfun.mmorpg.game.player.service;
 
-import com.google.common.collect.Sets;
+import jforgame.commons.ds.ConcurrentHashSet;
+import jforgame.socket.share.IdSession;
+import lombok.extern.java.Log;
 import org.forfun.mmorpg.game.account.model.AccountProfile;
 import org.forfun.mmorpg.game.base.GameContext;
 import org.forfun.mmorpg.game.database.config.inject.CommonValueInject;
 import org.forfun.mmorpg.game.database.config.inject.CommonValueReloadListener;
+import org.forfun.mmorpg.game.database.config.inject.IntArrayConfigValueParser;
 import org.forfun.mmorpg.game.database.user.dao.PlayerDao;
 import org.forfun.mmorpg.game.database.user.entity.AccountEnt;
 import org.forfun.mmorpg.game.database.user.entity.PlayerEnt;
@@ -12,8 +15,6 @@ import org.forfun.mmorpg.game.logger.LoggerUtils;
 import org.forfun.mmorpg.game.player.message.ResPlayerLogin;
 import org.forfun.mmorpg.game.player.model.PlayerProfile;
 import org.forfun.mmorpg.game.script.impl.LoginScript;
-import org.forfun.mmorpg.net.socket.IdSession;
-import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,10 +44,13 @@ public class PlayerService implements CommonValueReloadListener {
 	@CommonValueInject(alias = "playerMaxLevel")
 	private int maxValue;
 
+	@CommonValueInject(alias = "specialLevels", parser = IntArrayConfigValueParser.class)
+	private int[] specialLevels;
+
 	/**
 	 * 在线玩家列表
 	 */
-	private Set<Long> onlines = Sets.newConcurrentHashSet();
+	private Set<Long> onlines = new ConcurrentHashSet<>();
 
 	/** 全服所有角色的简况 */
 	private ConcurrentMap<Long, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
@@ -69,7 +73,7 @@ public class PlayerService implements CommonValueReloadListener {
 	}
 
 	public PlayerEnt getPlayer(long id) {
-		return playerCacheService.getEntity(id, PlayerEnt.class);
+		return playerCacheService.getEntity(id);
 	}
 
 	/**
@@ -84,7 +88,7 @@ public class PlayerService implements CommonValueReloadListener {
 	public ResPlayerLogin login(IdSession session, long playerId) {
 		PlayerEnt player = new PlayerEnt();
 		GameContext.getScriptService().getScript(LoginScript.class).onLogin(player);
-		session.bindDispatcher(player);
+//		session.bindDispatcher(player);
 		return new ResPlayerLogin();
 	}
 
@@ -97,7 +101,7 @@ public class PlayerService implements CommonValueReloadListener {
 
 		long accountId = baseInfo.getAccountId();
 		// 必须将account加载并缓存
-		AccountEnt account = GameContext.getAccountService().getAccount(accountId);
+		AccountEnt account = GameContext.getAccountService().getEntity(accountId);
 		accountProfiles.putIfAbsent(accountId, new AccountProfile());
 		AccountProfile accountProfile = accountProfiles.get(accountId);
 		accountProfile.addPlayerProfile(baseInfo);
@@ -108,7 +112,7 @@ public class PlayerService implements CommonValueReloadListener {
 		if (accountProfile != null) {
 			return accountProfile;
 		}
-		AccountEnt account = GameContext.getAccountService().getAccount(accountId);
+		AccountEnt account = GameContext.getAccountService().getEntity(accountId);
 		if (account != null) {
 			accountProfile = new AccountProfile();
 			accountProfile.setAccountId(accountId);

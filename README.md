@@ -8,16 +8,7 @@ mmorpg，是一个用java编写的分布式高性能mmorpg手游服务端框架�
 * 分布式部署，无状态战斗服支持横向拓展
 * 框架提供多种组件，可以直接二次开发业务逻辑  
 * 提供热更机制以及jmx接口，方便对生产项目进行监控与维护    
-* 尽可能使用springboot组件进行搭建    
-
-
-
-## 使用spring/springboot的组件 
-名称 | 用途 
-----|------
-spring cache | 数据缓存 
-SpringDataJpa | 多数据源orm工具  
-springmvc | 管理后台接口
+* 尽可能使用spring/springboot组件进行搭建    
 
 
 ## ToDoList  
@@ -27,8 +18,9 @@ springmvc | 管理后台接口
 * 更多基础设施与业务演示  
 
 ## 与jforgame项目的主要不同之处 
-* JDK使用了版本15
-* 使用spring-boot框架，力求最便利使用spring组件
+* JDK使用了版本17
+* jforgame注重于造轮子，mmo注重于重用jforgame基础组件
+* 使用spring-boot框架
 * 依赖管理选用了gradle
 * 重点用于演示场景及技能系统  
 * 尝试使用一些新技术栈  
@@ -45,13 +37,14 @@ springmvc | 管理后台接口
 
 ## 请作者喝杯咖啡
 如果您觉得有所收获，可以请作者喝杯咖啡。大家的支持，促使我不断改进优化，谢谢！  
-![](/screenshots/wx.png "微信收款码")
+![](/screenshots/wx.jpg "微信收款码")
 ![](/screenshots/zfb.jpg "支付宝收款码")
 
 
 ## 一起交流
-如果您发现bug，或者有任何疑问，请提交issue !!
-架构解析，技术咨询，请加Q475139136（有偿服务，非诚勿扰 !!）
+如果您发现bug，或者有任何疑问，请提交issue !!  
+我刚开通了知识星球，来向我提问吧~~
+![](/screenshots/zsxq.jpg "知识星球")
 
 
 ## 免责申明
